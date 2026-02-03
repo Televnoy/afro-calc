@@ -1,4 +1,4 @@
-const CACHE_NAME = 'afroperm-v2';
+﻿const CACHE_NAME = 'afroperm-v2';
 const ASSETS = [
   './',
   './index.html',
