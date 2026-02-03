@@ -1,53 +1,23 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
-	<title>be1.ru</title>
-</head>
-<body>
-<p>{</p>
-
-<p>&nbsp; &quot;name&quot;: &quot;AfroPerm Calculator&quot;,</p>
-
-<p>&nbsp; &quot;short_name&quot;: &quot;AfroPerm&quot;,</p>
-
-<p>&nbsp; &quot;description&quot;: &quot;Профессиональный калькулятор стоимости дред студии AfroPerm&quot;,</p>
-
-<p>&nbsp; &quot;start_url&quot;: &quot;index.html&quot;,</p>
-
-<p>&nbsp; &quot;display&quot;: &quot;standalone&quot;,</p>
-
-<p>&nbsp; &quot;background_color&quot;: &quot;#ffffff&quot;,</p>
-
-<p>&nbsp; &quot;theme_color&quot;: &quot;#111827&quot;,</p>
-
-<p>&nbsp; &quot;orientation&quot;: &quot;portrait&quot;,</p>
-
-<p>&nbsp; &quot;icons&quot;: [</p>
-
-<p>&nbsp; &nbsp; {</p>
-
-<p>&nbsp; &nbsp; &nbsp; &quot;src&quot;: &quot;https://via.placeholder.com/192/000000/FFFFFF?text=AP&quot;,</p>
-
-<p>&nbsp; &nbsp; &nbsp; &quot;sizes&quot;: &quot;192x192&quot;,</p>
-
-<p>&nbsp; &nbsp; &nbsp; &quot;type&quot;: &quot;image/png&quot;,</p>
-
-<p>&nbsp; &nbsp; &nbsp; &quot;purpose&quot;: &quot;any maskable&quot;</p>
-
-<p>&nbsp; &nbsp; },</p>
-
-<p>&nbsp; &nbsp; {</p>
-
-<p>&nbsp; &nbsp; &nbsp; &quot;src&quot;: &quot;https://via.placeholder.com/512/000000/FFFFFF?text=AfroPerm&quot;,</p>
-
-<p>&nbsp; &nbsp; &nbsp; &quot;sizes&quot;: &quot;512x512&quot;,</p>
-
-<p>&nbsp; &nbsp; &nbsp; &quot;type&quot;: &quot;image/png&quot;</p>
-
-<p>&nbsp; &nbsp; }</p>
-
-<p>&nbsp; ]</p>
-
-<p>}</p>
-</body>
-</html>
+{
+  "name": "AfroPerm Calculator",
+  "short_name": "AfroPerm",
+  "description": "Профессиональный калькулятор стоимости дред студии AfroPerm",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#111827",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192/000000/FFFFFF?text=AP",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://via.placeholder.com/512/000000/FFFFFF?text=AfroPerm",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
