@@ -3,348 +3,641 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AfroPerm — Калькулятор</title>
-    
-    <!-- PWA Meta -->
-    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://via.placeholder.com/192/000000/FFFFFF?text=AP">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#111827">
+    <title>AfroPerm | Professional Tool</title>
+    
+    <!-- PWA Manifest Inline -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkFmcm9QZXJtIENhbGMiLAogICJzaG9ydF9uYW1lIjogIkFmcm9QZXJtIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmZmZmZmYiLAogICJ0aGVtZV9jb2xvciI6ICIjMTExODI3IiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9wbGFjZWhvbGQuY28vMTkyL3BuZz80NDQ0NDQvZmZmZmZmJnRleHQ9QVAsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby81MTIvcG5nPzQ0NDQ0NC9mZmZmZmYmdGV4dD1BUCIsCiAgICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfCiAgXQp9">
 
-    <!-- VK Bridge SDK -->
-    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
+        :root {
+            --charcoal: #111827;
+            --soft-gray: #9CA3AF;
+            --border: #E5E7EB;
+        }
+
         body {
-            background-color: #ffffff;
-            font-family: 'Inter', sans-serif;
-            color: #111827;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: #FFFFFF;
+            color: var(--charcoal);
             -webkit-font-smoothing: antialiased;
             margin: 0;
             padding: 0;
-            user-select: none;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Canvas для брызг */
+        #splatterCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
         }
 
         .sticky-header {
             position: sticky;
             top: 0;
-            z-index: 40;
-            background-color: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid #f3f4f6;
+            z-index: 50;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            font-weight: 600;
+            font-size: 0.7rem;
+        }
+
+        .info-btn {
+            font-size: 0.65rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border: 1px solid var(--charcoal);
+            padding: 0.4rem 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .main-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 14rem;
+        }
+
+        .section-label {
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: var(--soft-gray);
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .input-group {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .service-selector {
+            display: flex;
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            margin-bottom: 3rem;
+        }
+
+        .service-option {
+            flex: 1;
+            background: #FFF;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 0.15em;
+            font-weight: 500;
+        }
+
+        .service-option.active {
+            background: var(--charcoal);
+            color: #FFF;
         }
 
         input[type="range"] {
             -webkit-appearance: none;
             width: 100%;
-            height: 3px;
-            background: #e5e7eb;
+            height: 1px;
+            background: var(--border);
             outline: none;
-            cursor: pointer;
+            margin: 1.5rem 0;
         }
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
-            background: #111827;
+            width: 24px;
+            height: 24px;
+            background: #FFFFFF;
+            border: 1px solid var(--charcoal);
             border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-
-        .minimal-check {
-            appearance: none;
-            width: 22px;
-            height: 22px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
             cursor: pointer;
-            position: relative;
         }
 
-        .minimal-check:checked {
-            background: #111827;
-            border-color: #111827;
+        .display-value {
+            font-weight: 200;
+            font-size: 3.5rem;
+            line-height: 1;
+            letter-spacing: -0.02em;
         }
 
-        .minimal-check:checked::after {
+        .unit {
+            font-size: 0.9rem;
+            color: var(--soft-gray);
+            margin-left: 0.5rem;
+            font-weight: 300;
+        }
+
+        .custom-checkbox {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.75rem 0;
+        }
+
+        .custom-checkbox input { display: none; }
+
+        .checkmark {
+            width: 20px;
+            height: 20px;
+            border: 1px solid var(--charcoal);
+            margin-right: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .custom-checkbox input:checked + .checkmark { background: var(--charcoal); }
+        .custom-checkbox input:checked + .checkmark::after {
             content: '';
-            position: absolute;
-            left: 7px;
-            top: 3px;
             width: 6px;
-            height: 12px;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
+            height: 6px;
+            background: white;
         }
+
+        .sub-control {
+            max-height: 0;
+            overflow: hidden;
+            padding-left: 2rem;
+            border-left: 1px solid var(--border);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sub-control.active {
+            max-height: 600px;
+            opacity: 1;
+            margin-top: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .result-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #FFFFFF;
+            border-top: 1px solid var(--charcoal);
+            padding: 2rem 1.5rem calc(2rem + env(safe-area-inset-bottom));
+            max-width: 600px;
+            margin: 0 auto;
+            z-index: 40;
+        }
+
+        .price-display {
+            font-weight: 100;
+            font-size: 4rem;
+            letter-spacing: -0.05em;
+            line-height: 1;
+        }
+
+        #modalOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            z-index: 100;
+            display: none;
+            overflow-y: auto;
+            padding: 2rem 1rem;
+        }
+
+        .modal-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0 3rem;
+            font-size: 0.8rem;
+        }
+
+        .price-table th, .price-table td {
+            text-align: left;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .price-table th {
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--soft-gray);
+            font-weight: 600;
+        }
+
+        .info-block {
+            margin-bottom: 2.5rem;
+            line-height: 1.6;
+            font-size: 0.85rem;
+        }
+
+        .info-block h3 {
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .contact-info {
+            background: #F9FAFB;
+            padding: 2rem;
+            margin-top: 3rem;
+            font-size: 0.8rem;
+        }
+
+        .hidden-element { display: none !important; }
     </style>
 </head>
-<body id="app-root">
+<body>
 
-    <!-- Header -->
-    <div class="max-w-3xl mx-auto p-6 md:p-16 pb-0">
-        <div class="flex justify-between items-start">
-            <div class="space-y-1.5">
-                <h1 class="text-[12px] font-medium uppercase tracking-[0.2em] text-gray-400 leading-tight">AfroPerm / Студия</h1>
-                <p class="text-[9px] uppercase tracking-[0.2em] text-gray-300 font-medium leading-tight">плетения и обучения</p>
+    <canvas id="splatterCanvas"></canvas>
+
+    <header class="sticky-header">
+        <div class="header-title">AfroPerm Studio</div>
+        <div class="info-btn" onclick="toggleModal(true)">Прайс & Инфо</div>
+    </header>
+
+    <!-- Модальное окно -->
+    <div id="modalOverlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-10">
+                <span class="section-label" style="margin-bottom:0">Цены и Информация</span>
+                <button onclick="toggleModal(false)" class="text-3xl font-light p-2">&times;</button>
             </div>
-            <button onclick="toggleModal(true)" class="text-[12px] font-bold uppercase tracking-widest border-b-2 border-gray-900 pb-1">Прайс и инфо</button>
+
+            <div class="info-block">
+                <p class="text-sm font-light text-gray-500 italic">Для понимания: итоговая стоимость зависит от количества изготовленных дредов. Количество же зависит от качества ваших волос и желаемого результата — желаемой толщины дреда.</p>
+            </div>
+
+            <div class="info-block">
+                <h3>01. Стоимость плетения</h3>
+                <table class="price-table">
+                    <thead>
+                        <tr><th>Длина</th><th>Цена за шт.</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>до 10 см</td><td>300 ₽</td></tr>
+                        <tr><td>до 20 см</td><td>500 ₽</td></tr>
+                        <tr><td>до 30 см</td><td>700 ₽</td></tr>
+                        <tr><td>до 40 см</td><td>900 ₽</td></tr>
+                        <tr><td>каждые +10 см</td><td>+200 ₽</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="info-block">
+                <h3>02. Дополнительные услуги</h3>
+                <table class="price-table">
+                    <tbody>
+                        <tr><td>Коррекция (база)</td><td>150 ₽ / шт.</td></tr>
+                        <tr><td>Оформление кончика</td><td>50 ₽ / шт.</td></tr>
+                        <tr><td>Сращивание (удлинение)</td><td>50 ₽ / шт.</td></tr>
+                        <tr><td>Коррекция длины</td><td>50 ₽ / 10 см</td></tr>
+                        <tr><td>Прикорневое валяние</td><td>30 ₽ / шт.</td></tr>
+                        <tr><td>Капучино</td><td>Ваша улыбка :)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="info-block">
+                <h3>03. Рекомендации по количеству</h3>
+                <div class="space-y-4 font-light text-gray-700">
+                    <p><strong>Толстые дреды (40-60 штук):</strong> подходит только для густых волос. На среднюю густоту 45-55 / густые 50-60.</p>
+                    <p><strong>Чуть толще стандарта (60-80 штук):</strong> на не густые 60-70 / на среднюю густоту 65-75 / на густые где то 70-80 штук.</p>
+                    <p><strong>Стандартной толщины (80-100 штук):</strong> на не густые 80-90 / на среднюю густоту 85-95 / на густые 90-100.</p>
+                    <p><strong>Тонкие дреды:</strong> больше 100 штук на все типы волос.</p>
+                </div>
+            </div>
+
+            <div class="info-block">
+                <h3>04. Особенности зон</h3>
+                <p class="font-light text-gray-700">Зона андерката составляет примерно половину (1/2) от всего количества изготовления дредов на всю голову. Не заплетенная челка составляет примерно 1/5 от общего количества.</p>
+            </div>
+
+            <div class="info-block">
+                <h3>05. От чего зависит потеря длины</h3>
+                <ul class="list-disc pl-5 font-light text-gray-700 space-y-1">
+                    <li>длины волос (чем длиннее волосы, тем больше уходит длина)</li>
+                    <li>их качества (чем равномернее длина, тем они лучше сохраниться)</li>
+                    <li>желаемой толщины дредов (чем они толще, тем сильнее уходит длина)</li>
+                    <li>вид кончика (заправленный съедает больше длины)</li>
+                </ul>
+            </div>
+
+            <div class="contact-info">
+                <p class="font-semibold mb-2 uppercase tracking-widest text-[0.7rem]">Контакты</p>
+                <p>Пермь, Николая Островского 60, 2 этаж, офис 206а</p>
+                <p class="mt-2">Тел: <a href="tel:+79223503162" class="underline font-medium">+7 (922) 350-31-62</a></p>
+                <p class="mt-1">ВК: <a href="https://vk.ru/afro_perm" target="_blank" class="underline font-medium">vk.ru/afro_perm</a></p>
+            </div>
+
+            <button onclick="toggleModal(false)" class="w-full mt-10 border border-black p-5 uppercase tracking-widest text-xs font-bold bg-black text-white hover:opacity-90 transition-all">Закрыть</button>
         </div>
     </div>
 
-    <!-- Sticky Price -->
-    <div class="sticky-header mb-8 md:mb-16">
-        <header class="p-6 md:px-16 md:py-10 max-w-3xl mx-auto">
-            <div class="space-y-2">
-                <p id="mode-title" class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Ориентировочная стоимость / Плетения</p>
-                <div id="total-price" class="text-5xl md:text-7xl font-light tracking-tighter">0 ₽</div>
-            </div>
-        </header>
-    </div>
-
-    <main class="max-w-3xl mx-auto px-6 pb-32">
-        <div class="flex space-x-12 border-b border-gray-100 mb-12 md:mb-16">
-            <button onclick="changeMode('braiding')" id="tab-braiding" class="pb-4 md:pb-6 text-sm font-bold uppercase tracking-widest border-b-2 border-black transition-all">Плетение</button>
-            <button onclick="changeMode('correction')" id="tab-correction" class="pb-4 md:pb-6 text-sm font-bold uppercase tracking-widest text-gray-400 border-b-2 border-transparent transition-all">Подплетение</button>
+    <main class="main-container">
+        <span class="section-label">00. Тип услуги</span>
+        <div class="service-selector">
+            <div id="typeCreation" class="service-option active" onclick="setService('creation', event)">Плетение</div>
+            <div id="typeCorrection" class="service-option" onclick="setService('correction', event)">Коррекция</div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20">
-            <!-- Controls -->
-            <div class="space-y-12 md:space-y-16">
-                <div class="space-y-8">
-                    <div class="flex justify-between items-baseline">
-                        <label class="text-[12px] uppercase font-bold tracking-widest text-gray-400">Количество</label>
-                        <span id="display-count" class="text-2xl font-medium">0 шт</span>
-                    </div>
-                    <input type="range" id="input-count" min="0" max="150" value="0">
-                </div>
+        <div class="input-group">
+            <span id="mainCountLabel" class="section-label">01. Общее количество</span>
+            <div class="flex items-baseline">
+                <span id="countVal" class="display-value">50</span>
+                <span class="unit">шт</span>
+            </div>
+            <input type="range" id="countRange" min="0" max="150" value="50">
+        </div>
 
-                <div id="section-length" class="space-y-8">
-                    <div class="flex justify-between items-baseline">
-                        <label class="text-[12px] uppercase font-bold tracking-widest text-gray-400">Длина дред</label>
-                        <span id="display-length" class="text-2xl font-medium">0 см</span>
+        <div id="groupLength" class="input-group">
+            <span class="section-label">02. Длина</span>
+            <div class="flex items-baseline">
+                <span id="lengthVal" class="display-value">10</span>
+                <span class="unit">см</span>
+            </div>
+            <input type="range" id="lengthRange" min="5" max="100" value="10">
+        </div>
+
+        <div id="groupAddons" class="input-group" style="border-bottom: none;">
+            <span class="section-label">03. Дополнительно</span>
+            
+            <label class="custom-checkbox" onclick="triggerSplatter(event)">
+                <input type="checkbox" id="bluntEndToggle">
+                <span class="checkmark"></span>
+                <span class="checkbox-label uppercase tracking-widest text-[0.65rem] font-bold">Тупой кончик (+50₽/шт)</span>
+            </label>
+            <div id="bluntEndControl" class="sub-control">
+                <div class="flex items-baseline mt-2">
+                    <span id="bluntCountVal" class="display-value text-2xl" style="font-size: 2.2rem;">50</span>
+                    <span class="unit">шт</span>
+                </div>
+                <input type="range" id="bluntCountRange" min="0" max="150" value="50">
+            </div>
+
+            <label class="custom-checkbox mt-2" onclick="triggerSplatter(event)">
+                <input type="checkbox" id="fusionToggle">
+                <span class="checkmark"></span>
+                <span class="checkbox-label uppercase tracking-widest text-[0.65rem] font-bold">Сращивание (+50₽/шт)</span>
+            </label>
+            <div id="fusionControl" class="sub-control">
+                <div class="flex items-baseline mt-2">
+                    <span id="fusionCountVal" class="display-value text-2xl" style="font-size: 2.2rem;">50</span>
+                    <span class="unit">шт</span>
+                </div>
+                <input type="range" id="fusionCountRange" min="0" max="150" value="50">
+            </div>
+        </div>
+
+        <div id="groupAddonsCorrection" class="input-group hidden-element" style="border-bottom: none;">
+            <span class="section-label">03. Доп. услуги</span>
+            
+            <label class="custom-checkbox" onclick="triggerSplatter(event)">
+                <input type="checkbox" id="correctionLengthToggle">
+                <span class="checkmark"></span>
+                <span class="checkbox-label uppercase tracking-widest text-[0.65rem] font-bold">Коррекция длины (+50₽/10см)</span>
+            </label>
+            <div id="correctionLengthControl" class="sub-control">
+                <div class="mb-4">
+                    <span class="section-label" style="font-size: 0.5rem;">Количество дред</span>
+                    <div class="flex items-baseline">
+                        <span id="corrLengthCountVal" class="display-value text-2xl" style="font-size: 2.2rem;">50</span>
+                        <span class="unit">шт</span>
                     </div>
-                    <input type="range" id="input-length" min="0" max="100" step="5" value="0">
+                    <input type="range" id="corrLengthCountRange" min="0" max="150" value="50">
+                </div>
+                <div>
+                    <span class="section-label" style="font-size: 0.5rem;">Длина коррекции</span>
+                    <div class="flex items-baseline">
+                        <span id="corrLengthCmVal" class="display-value text-2xl" style="font-size: 2.2rem;">10</span>
+                        <span class="unit">см</span>
+                    </div>
+                    <input type="range" id="corrLengthCmRange" min="10" max="100" value="10" step="10">
                 </div>
             </div>
 
-            <!-- Extras -->
-            <div class="space-y-12 md:space-y-16">
-                <div class="space-y-8">
-                    <h3 class="text-[12px] uppercase font-bold tracking-[0.2em] text-gray-900 border-b border-gray-100 pb-3">Дополнительно</h3>
-                    
-                    <!-- Braiding Extras -->
-                    <div id="braiding-extras" class="space-y-6">
-                        <div class="flex items-start space-x-4">
-                            <input type="checkbox" id="check-blunt" class="minimal-check mt-1">
-                            <div class="flex-1">
-                                <label for="check-blunt" class="text-sm font-semibold block">Тупые кончики <span class="text-gray-400 ml-2">+50₽/шт</span></label>
-                                <div id="panel-blunt" class="hidden mt-6">
-                                    <input type="range" id="input-blunt" min="0" max="150" value="0">
-                                    <div class="text-[10px] mt-2 font-bold text-gray-400 uppercase tracking-wider">Количество: <span id="val-blunt">0</span></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-start space-x-4 pt-4">
-                            <input type="checkbox" id="check-fusion" class="minimal-check mt-1">
-                            <div class="flex-1">
-                                <label for="check-fusion" class="text-sm font-semibold block">Сращивание <span class="text-gray-400 ml-2">+50₽/шт</span></label>
-                                <div id="panel-fusion" class="hidden mt-6">
-                                    <input type="range" id="input-fusion" min="0" max="150" value="0">
-                                    <div class="text-[10px] mt-2 font-bold text-gray-400 uppercase tracking-wider">Количество: <span id="val-fusion">0</span></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Correction Extras -->
-                    <div id="correction-extras" class="hidden space-y-6">
-                        <div class="flex items-start space-x-4">
-                            <input type="checkbox" id="check-corr-len" class="minimal-check mt-1">
-                            <div class="flex-1">
-                                <label for="check-corr-len" class="text-sm font-semibold block">Коррекция по длине <span class="text-gray-400 ml-2">+50₽/10см</span></label>
-                                <div id="panel-corr-len" class="hidden mt-6 space-y-6">
-                                    <input type="range" id="input-corr-len-count" min="0" max="150" value="0">
-                                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Для скольки: <span id="val-corr-len-count">0</span> шт</div>
-                                    <input type="range" id="input-corr-len-val" min="0" max="100" step="10" value="0">
-                                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Длина коррекции: <span id="val-corr-len-val">0</span> см</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-start space-x-4 pt-4">
-                            <input type="checkbox" id="check-root" class="minimal-check mt-1">
-                            <div class="flex-1">
-                                <label for="check-root" class="text-sm font-semibold block">Прикорневое валяние <span class="text-gray-400 ml-2">+30₽/шт</span></label>
-                                <div id="panel-root" class="hidden mt-6">
-                                    <input type="range" id="input-root" min="0" max="150" value="0">
-                                    <div class="text-[10px] mt-2 font-bold text-gray-400 uppercase tracking-wider">Количество: <span id="val-root">0</span> шт</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <label class="custom-checkbox mt-2" onclick="triggerSplatter(event)">
+                <input type="checkbox" id="rootFeltingToggle">
+                <span class="checkmark"></span>
+                <span class="checkbox-label uppercase tracking-widest text-[0.65rem] font-bold">Прикорневое валяние (+30₽/шт)</span>
+            </label>
+            <div id="rootFeltingControl" class="sub-control">
+                <div class="flex items-baseline mt-2">
+                    <span id="rootFeltingCountVal" class="display-value text-2xl" style="font-size: 2.2rem;">50</span>
+                    <span class="unit">шт</span>
                 </div>
-
-                <div class="pt-10 border-t border-gray-100 space-y-4">
-                    <div class="flex justify-between text-[11px] uppercase font-bold tracking-widest text-gray-400">
-                        <span>База за 1 шт</span>
-                        <span id="res-base">0 ₽</span>
-                    </div>
-                    <div id="res-extra-row" class="hidden flex justify-between text-[11px] uppercase font-bold tracking-widest text-gray-900">
-                        <span>Доп. услуги (итого)</span>
-                        <span id="res-extra">0 ₽</span>
-                    </div>
-                </div>
+                <input type="range" id="rootFeltingCountRange" min="0" max="150" value="50">
             </div>
         </div>
     </main>
 
-    <!-- Modal -->
-    <div id="modal-info" class="fixed inset-0 z-50 opacity-0 pointer-events-none transition-all duration-300 overflow-y-auto bg-white">
-        <div class="max-w-3xl mx-auto p-6 md:p-16">
-            <div class="flex justify-between items-center mb-16 md:mb-24">
-                <h2 class="text-[12px] font-black uppercase tracking-[0.4em] text-gray-900">Прайс и информация</h2>
-                <button onclick="toggleModal(false)" class="text-[12px] font-bold uppercase tracking-widest border-b-2 border-black pb-1">Закрыть</button>
-            </div>
-
-            <div class="space-y-20 md:space-y-24">
-                <section class="space-y-10">
-                    <div class="flex justify-between items-baseline border-b border-gray-100 pb-4">
-                        <h3 class="text-[12px] uppercase font-bold tracking-[0.2em] text-gray-400">Плетение / База</h3>
-                    </div>
-                    <div class="grid grid-cols-1 gap-6">
-                        <div class="flex justify-between"><span>/ До 10 см</span><span class="text-xl">300 ₽</span></div>
-                        <div class="flex justify-between"><span>/ 11 – 20 см</span><span class="text-xl">500 ₽</span></div>
-                        <div class="flex justify-between"><span>/ 21 – 30 см</span><span class="text-xl">700 ₽</span></div>
-                        <div class="flex justify-between"><span>/ 31 – 40 см</span><span class="text-xl">900 ₽</span></div>
-                        <div class="flex justify-between"><span>/ 41 – 50 см</span><span class="text-xl">1 100 ₽</span></div>
-                    </div>
-                </section>
-
-                <section class="space-y-10">
-                    <div class="flex justify-between items-baseline border-b border-gray-100 pb-4">
-                        <h3 class="text-[12px] uppercase font-bold tracking-[0.2em] text-gray-400">Сервис и коррекция</h3>
-                    </div>
-                    <div class="grid grid-cols-1 gap-6">
-                        <div class="flex justify-between"><span>/ Подплетение</span><span class="text-xl">150 ₽<small class="text-gray-400 ml-1">/шт</small></span></div>
-                        <div class="flex justify-between"><span>/ Тупой кончик</span><span class="text-xl">50 ₽<small class="text-gray-400 ml-1">/шт</small></span></div>
-                        <div class="flex justify-between"><span>/ Сращивание</span><span class="text-xl">50 ₽<small class="text-gray-400 ml-1">/шт</small></span></div>
-                        <div class="flex justify-between"><span>/ Валяние корней</span><span class="text-xl">30 ₽<small class="text-gray-400 ml-1">/шт</small></span></div>
-                        <div class="flex justify-between"><span>/ Коррекция тела</span><span class="text-xl">50 ₽<small class="text-gray-400 ml-1">/10см</small></span></div>
-                        <div class="flex justify-between pt-4 border-t border-gray-50 text-gray-400 italic">
-                            <span class="font-semibold text-gray-700">/ Стакан капучино</span>
-                            <span class="uppercase tracking-widest text-[11px] font-bold">ваша улыбка</span>
-                        </div>
-                    </div>
-                </section>
-
-                <footer class="border-t border-gray-900 pt-20 pb-32 text-center space-y-6">
-                    <p class="text-[10px] uppercase font-bold text-gray-400 tracking-[0.5em]">AfroPerm Studio</p>
-                    <a href="tel:+79223503162" class="text-3xl md:text-5xl font-light tracking-tighter block">+7 (922) 350-31-62</a>
-                </footer>
-            </div>
+    <div class="result-panel">
+        <span id="resultLabel" class="section-label">Итого</span>
+        <div class="flex items-baseline">
+            <span id="totalPrice" class="price-display">0</span>
+            <span class="text-xl font-light ml-4 opacity-50">₽</span>
         </div>
     </div>
 
     <script>
-        // VK Bridge Init
-        if (typeof vkBridge !== 'undefined') {
-            vkBridge.send("VKWebAppInit");
+        // --- Звуковой движок ---
+        let audioCtx;
+        function playInteractionSound() {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.04);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            } catch (e) {}
         }
 
-        // PWA Service Worker Reg
+        // --- Анимация частиц (Брызги) ---
+        const canvas = document.getElementById('splatterCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 6 + 2;
+                this.speedX = (Math.random() - 0.5) * 15;
+                this.speedY = (Math.random() - 0.5) * 15 - 4;
+                this.gravity = 0.4;
+                this.life = 1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.speedY += this.gravity;
+                this.life -= 0.02;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(17, 24, 37, ${this.life})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function triggerSplatter(e) {
+            playInteractionSound();
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX || (rect.left + rect.width / 2);
+            const y = e.clientY || (rect.top + rect.height / 2);
+            for (let i = 0; i < 20; i++) particles.push(new Particle(x, y));
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles = particles.filter(p => p.life > 0);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // --- PWA Service Worker ---
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(() => {});
-            });
+            const swCode = `
+                const CACHE_NAME = 'afroperm-v3';
+                self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./']))));
+                self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+            `;
+            const blob = new Blob([swCode], {type: 'application/javascript'});
+            navigator.serviceWorker.register(URL.createObjectURL(blob));
         }
 
-        let mode = 'braiding';
-
-        function toggleModal(show) {
-            const m = document.getElementById('modal-info');
-            if(show) {
-                m.classList.remove('pointer-events-none', 'opacity-0');
-                document.body.style.overflow = 'hidden';
-            } else {
-                m.classList.add('opacity-0', 'pointer-events-none');
-                document.body.style.overflow = 'auto';
-            }
+        let currentService = 'creation';
+        
+        function toggleModal(show) { 
+            document.getElementById('modalOverlay').style.display = show ? 'block' : 'none'; 
+            document.body.style.overflow = show ? 'hidden' : 'auto'; 
         }
 
-        function changeMode(newMode) {
-            mode = newMode;
-            document.getElementById('tab-braiding').className = mode === 'braiding' ? 'pb-4 md:pb-6 text-sm font-bold uppercase tracking-widest border-b-2 border-black transition-all' : 'pb-4 md:pb-6 text-sm font-bold uppercase tracking-widest text-gray-400 border-b-2 border-transparent transition-all';
-            document.getElementById('tab-correction').className = mode === 'correction' ? 'pb-4 md:pb-6 text-sm font-bold uppercase tracking-widest border-b-2 border-black transition-all' : 'pb-4 md:pb-6 text-sm font-bold uppercase tracking-widest text-gray-400 border-b-2 border-transparent transition-all';
+        function setService(type, event) {
+            triggerSplatter(event);
+            currentService = type;
+            document.getElementById('typeCreation').classList.toggle('active', type === 'creation');
+            document.getElementById('typeCorrection').classList.toggle('active', type === 'correction');
+            document.getElementById('groupLength').classList.toggle('hidden-element', type === 'correction');
+            document.getElementById('groupAddons').classList.toggle('hidden-element', type === 'correction');
+            document.getElementById('groupAddonsCorrection').classList.toggle('hidden-element', type === 'creation');
             
-            document.getElementById('section-length').style.display = mode === 'braiding' ? 'block' : 'none';
-            document.getElementById('braiding-extras').style.display = mode === 'braiding' ? 'block' : 'none';
-            document.getElementById('correction-extras').style.display = mode === 'correction' ? 'block' : 'none';
-            document.getElementById('mode-title').innerText = mode === 'braiding' ? 'Ориентировочная стоимость / Плетения' : 'Ориентировочная стоимость / Коррекции';
-            calculate();
+            const resultLabel = document.getElementById('resultLabel');
+            const mainCountLabel = document.getElementById('mainCountLabel');
+
+            if (type === 'correction') {
+                resultLabel.innerText = 'Оценка коррекции и подплетения';
+                mainCountLabel.innerText = '01. Общее количество подплетения';
+            } else {
+                resultLabel.innerText = 'Итоговая стоимость';
+                mainCountLabel.innerText = '01. Общее количество';
+            }
+            
+            updateUI();
         }
 
-        function calculate() {
-            const count = parseInt(document.getElementById('input-count').value);
-            document.getElementById('display-count').innerText = `${count} шт`;
-            let basePricePerOne = 0;
-            let extrasPrice = 0;
+        function updateUI() {
+            const count = parseInt(document.getElementById('countRange').value);
+            document.getElementById('countVal').innerText = count;
+            let total = 0;
 
-            if (mode === 'braiding') {
-                const len = parseInt(document.getElementById('input-length').value);
-                document.getElementById('display-length').innerText = `${len} см`;
-                if (count > 0) {
-                    basePricePerOne = 300;
-                    if (len > 10) basePricePerOne += Math.ceil((len - 10) / 10) * 200;
+            if (currentService === 'correction') {
+                total = count * 150;
+                if (document.getElementById('correctionLengthToggle').checked) {
+                    document.getElementById('correctionLengthControl').classList.add('active');
+                    const cCount = parseInt(document.getElementById('corrLengthCountRange').value);
+                    const cCm = parseInt(document.getElementById('corrLengthCmRange').value);
+                    total += (cCount * (cCm / 10 * 50));
+                } else document.getElementById('correctionLengthControl').classList.remove('active');
+
+                if (document.getElementById('rootFeltingToggle').checked) {
+                    document.getElementById('rootFeltingControl').classList.add('active');
+                    total += (parseInt(document.getElementById('rootFeltingCountRange').value) * 30);
+                } else document.getElementById('rootFeltingControl').classList.remove('active');
+
+                document.getElementById('corrLengthCountVal').innerText = document.getElementById('corrLengthCountRange').value;
+                document.getElementById('corrLengthCmVal').innerText = document.getElementById('corrLengthCmRange').value;
+                document.getElementById('rootFeltingCountVal').innerText = document.getElementById('rootFeltingCountRange').value;
+            } else {
+                const length = parseInt(document.getElementById('lengthRange').value);
+                document.getElementById('lengthVal').innerText = length;
+                let pricePerDread = 300;
+                if (length > 10) {
+                    const steps = Math.ceil((length - 10) / 10);
+                    pricePerDread += (steps * 200);
                 }
-                if (document.getElementById('check-blunt').checked) {
-                    document.getElementById('panel-blunt').classList.remove('hidden');
-                    extrasPrice += parseInt(document.getElementById('input-blunt').value) * 50;
-                    document.getElementById('val-blunt').innerText = document.getElementById('input-blunt').value;
-                } else document.getElementById('panel-blunt').classList.add('hidden');
-                
-                if (document.getElementById('check-fusion').checked) {
-                    document.getElementById('panel-fusion').classList.remove('hidden');
-                    extrasPrice += parseInt(document.getElementById('input-fusion').value) * 50;
-                    document.getElementById('val-fusion').innerText = document.getElementById('input-fusion').value;
-                } else document.getElementById('panel-fusion').classList.add('hidden');
-            } else {
-                if (count > 0) basePricePerOne = 150;
-                if (document.getElementById('check-corr-len').checked) {
-                    document.getElementById('panel-corr-len').classList.remove('hidden');
-                    const cCount = parseInt(document.getElementById('input-corr-len-count').value);
-                    const cLen = parseInt(document.getElementById('input-corr-len-val').value);
-                    document.getElementById('val-corr-len-count').innerText = cCount;
-                    document.getElementById('val-corr-len-val').innerText = cLen;
-                    extrasPrice += cCount * (cLen / 10 * 50);
-                } else document.getElementById('panel-corr-len').classList.add('hidden');
-                
-                if (document.getElementById('check-root').checked) {
-                    document.getElementById('panel-root').classList.remove('hidden');
-                    const v = parseInt(document.getElementById('input-root').value);
-                    document.getElementById('val-root').innerText = v;
-                    extrasPrice += v * 30;
-                } else document.getElementById('panel-root').classList.add('hidden');
-            }
+                total = count * pricePerDread;
 
-            const total = (count * basePricePerOne) + extrasPrice;
-            document.getElementById('total-price').innerText = `${total.toLocaleString()} ₽`;
-            document.getElementById('res-base').innerText = `${basePricePerOne} ₽`;
-            
-            const extraRow = document.getElementById('res-extra-row');
-            if (extrasPrice > 0) {
-                extraRow.classList.remove('hidden');
-                document.getElementById('res-extra').innerText = `${extrasPrice.toLocaleString()} ₽`;
-            } else extraRow.classList.add('hidden');
+                if (document.getElementById('bluntEndToggle').checked) {
+                    document.getElementById('bluntEndControl').classList.add('active');
+                    total += (parseInt(document.getElementById('bluntCountRange').value) * 50);
+                } else document.getElementById('bluntEndControl').classList.remove('active');
+
+                if (document.getElementById('fusionToggle').checked) {
+                    document.getElementById('fusionControl').classList.add('active');
+                    total += (parseInt(document.getElementById('fusionCountRange').value) * 50);
+                } else document.getElementById('fusionControl').classList.remove('active');
+
+                document.getElementById('bluntCountVal').innerText = document.getElementById('bluntCountRange').value;
+                document.getElementById('fusionCountVal').innerText = document.getElementById('fusionCountRange').value;
+            }
+            document.getElementById('totalPrice').innerText = total.toLocaleString('ru-RU');
         }
 
-        const controls = ['input-count', 'input-length', 'input-blunt', 'input-fusion', 'input-corr-len-count', 'input-corr-len-val', 'input-root', 'check-blunt', 'check-fusion', 'check-corr-len', 'check-root'];
-        controls.forEach(id => document.getElementById(id).addEventListener('input', calculate));
-        calculate();
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', updateUI);
+            input.addEventListener('change', updateUI);
+        });
+
+        window.onload = updateUI;
     </script>
 </body>
 </html>
