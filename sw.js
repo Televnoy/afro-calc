@@ -1,8 +1,8 @@
-﻿const CACHE_NAME = 'afroperm-cache-v1';
+const CACHE_NAME = 'afroperm-v1';
 const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json'
+  '/',
+  '/index.html',
+  '/manifest.json'
 ];
 
 // Установка воркера и кэширование ресурсов
@@ -24,12 +24,11 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Обработка запросов (сначала кэш, потом сеть)
+// Стратегия: сначала сеть, если нет связи — кэш
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => response || fetch(event.request))
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
+    })
   );
 });
-
-

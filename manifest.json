@@ -1,11 +1,12 @@
-﻿{
-  "name": "AfroPerm Professional Tool",
+{
+  "name": "AfroPerm Studio",
   "short_name": "AfroPerm",
-  "description": "Калькулятор стоимости услуг студии AfroPerm",
-  "start_url": "index.html",
+  "description": "Профессиональный инструмент расчета стоимости AfroPerm Studio",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#111827",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "icon-192.png",
@@ -16,9 +17,8 @@
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
-
-
