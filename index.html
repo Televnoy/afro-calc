@@ -7,10 +7,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#111827">
     <title>AfroPerm | Professional Tool</title>
-
-    <!-- VK Bridge для работы внутри ВКонтакте -->
-    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     
+    <!-- VK Bridge SDK -->
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+
     <!-- PWA Manifest Inline -->
     <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkFmcm9QZXJtIENhbGMiLAogICJzaG9ydF9uYW1lIjogIkFmcm9QZXJtIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmZmZmZmYiLAogICJ0aGVtZV9jb2xvciI6ICIjMTExODI3IiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9wbGFjZWhvbGQuY28vMTkyL3BuZz80NDQ0NDQvZmZmZmZmJnRleHQ9QVAsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby81MTIvcG5nPzQ0NDQ0NC9mZmZmZmYmdGV4dD1BUCIsCiAgICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfCiAgXQp9">
 
@@ -477,6 +477,11 @@
     </div>
 
     <script>
+        // --- VK Bridge Integration ---
+        if (typeof vkBridge !== 'undefined') {
+            vkBridge.send('VKWebAppInit');
+        }
+
         // --- Звуковой движок ---
         let audioCtx;
         function playInteractionSound() {
@@ -505,142 +510,3 @@
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
-
-        class Particle {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.size = Math.random() * 6 + 2;
-                this.speedX = (Math.random() - 0.5) * 15;
-                this.speedY = (Math.random() - 0.5) * 15 - 4;
-                this.gravity = 0.4;
-                this.life = 1;
-            }
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.speedY += this.gravity;
-                this.life -= 0.02;
-            }
-            draw() {
-                ctx.fillStyle = `rgba(17, 24, 37, ${this.life})`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        function triggerSplatter(e) {
-            playInteractionSound();
-            const rect = e.currentTarget.getBoundingClientRect();
-            const x = e.clientX || (rect.left + rect.width / 2);
-            const y = e.clientY || (rect.top + rect.height / 2);
-            for (let i = 0; i < 20; i++) particles.push(new Particle(x, y));
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles = particles.filter(p => p.life > 0);
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animate);
-        }
-        animate();
-
-        // --- PWA Service Worker ---
-        if ('serviceWorker' in navigator) {
-            const swCode = `
-                const CACHE_NAME = 'afroperm-v3';
-                self.addEventListener('install', e => e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(['./']))));
-                self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
-            `;
-            const blob = new Blob([swCode], {type: 'application/javascript'});
-            navigator.serviceWorker.register(URL.createObjectURL(blob));
-        }
-
-        let currentService = 'creation';
-        
-        function toggleModal(show) { 
-            document.getElementById('modalOverlay').style.display = show ? 'block' : 'none'; 
-            document.body.style.overflow = show ? 'hidden' : 'auto'; 
-        }
-
-        function setService(type, event) {
-            triggerSplatter(event);
-            currentService = type;
-            document.getElementById('typeCreation').classList.toggle('active', type === 'creation');
-            document.getElementById('typeCorrection').classList.toggle('active', type === 'correction');
-            document.getElementById('groupLength').classList.toggle('hidden-element', type === 'correction');
-            document.getElementById('groupAddons').classList.toggle('hidden-element', type === 'correction');
-            document.getElementById('groupAddonsCorrection').classList.toggle('hidden-element', type === 'creation');
-            
-            const resultLabel = document.getElementById('resultLabel');
-            const mainCountLabel = document.getElementById('mainCountLabel');
-
-            if (type === 'correction') {
-                resultLabel.innerText = 'Оценка коррекции и подплетения';
-                mainCountLabel.innerText = '01. Общее количество подплетения';
-            } else {
-                resultLabel.innerText = 'Итоговая стоимость';
-                mainCountLabel.innerText = '01. Общее количество';
-            }
-            
-            updateUI();
-        }
-
-        function updateUI() {
-            const count = parseInt(document.getElementById('countRange').value);
-            document.getElementById('countVal').innerText = count;
-            let total = 0;
-
-            if (currentService === 'correction') {
-                total = count * 150;
-                if (document.getElementById('correctionLengthToggle').checked) {
-                    document.getElementById('correctionLengthControl').classList.add('active');
-                    const cCount = parseInt(document.getElementById('corrLengthCountRange').value);
-                    const cCm = parseInt(document.getElementById('corrLengthCmRange').value);
-                    total += (cCount * (cCm / 10 * 50));
-                } else document.getElementById('correctionLengthControl').classList.remove('active');
-
-                if (document.getElementById('rootFeltingToggle').checked) {
-                    document.getElementById('rootFeltingControl').classList.add('active');
-                    total += (parseInt(document.getElementById('rootFeltingCountRange').value) * 30);
-                } else document.getElementById('rootFeltingControl').classList.remove('active');
-
-                document.getElementById('corrLengthCountVal').innerText = document.getElementById('corrLengthCountRange').value;
-                document.getElementById('corrLengthCmVal').innerText = document.getElementById('corrLengthCmRange').value;
-                document.getElementById('rootFeltingCountVal').innerText = document.getElementById('rootFeltingCountRange').value;
-            } else {
-                const length = parseInt(document.getElementById('lengthRange').value);
-                document.getElementById('lengthVal').innerText = length;
-                let pricePerDread = 300;
-                if (length > 10) {
-                    const steps = Math.ceil((length - 10) / 10);
-                    pricePerDread += (steps * 200);
-                }
-                total = count * pricePerDread;
-
-                if (document.getElementById('bluntEndToggle').checked) {
-                    document.getElementById('bluntEndControl').classList.add('active');
-                    total += (parseInt(document.getElementById('bluntCountRange').value) * 50);
-                } else document.getElementById('bluntEndControl').classList.remove('active');
-
-                if (document.getElementById('fusionToggle').checked) {
-                    document.getElementById('fusionControl').classList.add('active');
-                    total += (parseInt(document.getElementById('fusionCountRange').value) * 50);
-                } else document.getElementById('fusionControl').classList.remove('active');
-
-                document.getElementById('bluntCountVal').innerText = document.getElementById('bluntCountRange').value;
-                document.getElementById('fusionCountVal').innerText = document.getElementById('fusionCountRange').value;
-            }
-            document.getElementById('totalPrice').innerText = total.toLocaleString('ru-RU');
-        }
-
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('input', updateUI);
-            input.addEventListener('change', updateUI);
-        });
-
-        window.onload = updateUI;
-    </script>
-</body>
-</html>
