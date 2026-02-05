@@ -8,14 +8,17 @@
     <meta name="theme-color" content="#111827">
     <title>AfroPerm | Professional Tool</title>
     
-    <!-- VK Bridge SDK -->
+    <!-- VK Bridge SDK (используем стабильную версию) -->
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="icon.svg" type="image/svg+xml">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Заменяем cdn.tailwindcss.com на более стабильный jsDelivr для работы без VPN -->
+    <script src="https://cdn.jsdelivr.net/npm/tailwindcss-cdn@3.4.1/tailwindcss.js"></script>
+    
+    <!-- Шрифты с резервными вариантами -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600&display=swap" rel="stylesheet">
@@ -28,7 +31,7 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: #FFFFFF;
             color: var(--charcoal);
             -webkit-font-smoothing: antialiased;
@@ -282,7 +285,6 @@
             font-size: 0.8rem;
         }
 
-        /* Стиль кнопки установки */
         #pwaInstallContainer {
             display: none;
             margin-bottom: 2.5rem;
@@ -331,7 +333,7 @@
                 <p class="text-sm font-light text-gray-500 italic">Для понимания: итоговая стоимость зависит от количества изготовленных дредов. Количество же зависит от качества ваших волос и желаемого результата — желаемой толщины дреда.</p>
             </div>
 
-            <!-- Кнопка установки приложения внутри модалки -->
+            <!-- Кнопка установки -->
             <div id="pwaInstallContainer">
                 <button id="pwaInstallBtn" class="pwa-install-btn">Установить приложение на телефон</button>
             </div>
@@ -508,55 +510,37 @@
     </div>
 
     <script>
-        // --- VK Bridge Integration ---
+        // Инициализация VK Bridge с обработкой ошибок для стабильной работы в ВК
         if (typeof vkBridge !== 'undefined') {
-            vkBridge.send('VKWebAppInit');
+            vkBridge.send('VKWebAppInit').catch(e => console.log('VK Bridge error:', e));
         }
 
-        // --- PWA Installation Logic ---
+        // Логика PWA установки
         let deferredPrompt;
         const installContainer = document.getElementById('pwaInstallContainer');
         const installBtn = document.getElementById('pwaInstallBtn');
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Предотвращаем автоматический запуск окна браузером
             e.preventDefault();
-            // Сохраняем событие для вызова позже
             deferredPrompt = e;
-            // Показываем контейнер с кнопкой в модальном окне
             installContainer.style.display = 'block';
         });
 
         installBtn.addEventListener('click', async () => {
             if (!deferredPrompt) return;
-            // Запускаем нативный диалог
             deferredPrompt.prompt();
-            // Ждем выбора пользователя
             const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                console.log('Пользователь согласился на установку');
-            }
-            // Сбрасываем промпт и скрываем кнопку
             deferredPrompt = null;
             installContainer.style.display = 'none';
         });
 
-        // Скрываем кнопку после успешной установки
-        window.addEventListener('appinstalled', () => {
-            deferredPrompt = null;
-            installContainer.style.display = 'none';
-        });
-
-        // --- PWA Service Worker Registration ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('AfroPerm SW Registered', reg))
-                    .catch(err => console.log('SW Registration failed', err));
+                navigator.serviceWorker.register('./sw.js').catch(err => console.error(err));
             });
         }
 
-        // --- Sound Engine ---
+        // Звуковой движок
         let audioCtx;
         function playInteractionSound() {
             try {
@@ -573,7 +557,7 @@
             } catch (e) {}
         }
 
-        // --- Splatter Particles ---
+        // Анимация частиц
         const canvas = document.getElementById('splatterCanvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
@@ -587,8 +571,7 @@
 
         class Particle {
             constructor(x, y) {
-                this.x = x;
-                this.y = y;
+                this.x = x; this.y = y;
                 this.size = Math.random() * 4 + 1;
                 this.speedX = Math.random() * 6 - 3;
                 this.speedY = Math.random() * 6 - 3;
@@ -596,8 +579,7 @@
                 this.opacity = 1;
             }
             update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
+                this.x += this.speedX; this.y += this.speedY;
                 if (this.size > 0.1) this.size -= 0.1;
                 this.opacity -= 0.02;
             }
@@ -614,9 +596,7 @@
             const rect = e.currentTarget.getBoundingClientRect();
             const x = rect.left + rect.width / 2;
             const y = rect.top + rect.height / 2;
-            for (let i = 0; i < 15; i++) {
-                particles.push(new Particle(x, y));
-            }
+            for (let i = 0; i < 15; i++) particles.push(new Particle(x, y));
             playInteractionSound();
         }
 
@@ -625,16 +605,13 @@
             for (let i = 0; i < particles.length; i++) {
                 particles[i].update();
                 particles[i].draw();
-                if (particles[i].opacity <= 0) {
-                    particles.splice(i, 1);
-                    i--;
-                }
+                if (particles[i].opacity <= 0) { particles.splice(i, 1); i--; }
             }
             requestAnimationFrame(animate);
         }
         animate();
 
-        // --- App Logic ---
+        // Логика калькулятора
         let currentService = 'creation';
 
         function toggleModal(show) {
@@ -646,19 +623,14 @@
             currentService = type;
             document.getElementById('typeCreation').classList.toggle('active', type === 'creation');
             document.getElementById('typeCorrection').classList.toggle('active', type === 'correction');
-            
-            // Toggle groups
             document.getElementById('groupLength').classList.toggle('hidden-element', type === 'correction');
             document.getElementById('groupAddons').classList.toggle('hidden-element', type === 'correction');
             document.getElementById('groupAddonsCorrection').classList.toggle('hidden-element', type === 'creation');
-            
             document.getElementById('mainCountLabel').innerText = type === 'creation' ? '01. Общее количество' : '01. Количество дред';
-            
             triggerSplatter(e);
             calculateTotal();
         }
 
-        // Listeners for UI updates
         const inputs = [
             'countRange', 'lengthRange', 'bluntCountRange', 'fusionCountRange',
             'corrLengthCountRange', 'corrLengthCmRange', 'rootFeltingCountRange',
@@ -666,8 +638,7 @@
         ];
 
         inputs.forEach(id => {
-            const el = document.getElementById(id);
-            el.addEventListener('input', () => {
+            document.getElementById(id).addEventListener('input', () => {
                 updateUI();
                 calculateTotal();
             });
@@ -682,7 +653,6 @@
             document.getElementById('corrLengthCmVal').innerText = document.getElementById('corrLengthCmRange').value;
             document.getElementById('rootFeltingCountVal').innerText = document.getElementById('rootFeltingCountRange').value;
 
-            // Sub-controls visibility
             document.getElementById('bluntEndControl').classList.toggle('active', document.getElementById('bluntEndToggle').checked);
             document.getElementById('fusionControl').classList.toggle('active', document.getElementById('fusionToggle').checked);
             document.getElementById('correctionLengthControl').classList.toggle('active', document.getElementById('correctionLengthToggle').checked);
@@ -699,29 +669,18 @@
                 if (len > 30) pricePerUnit = 900 + (Math.floor((len - 40) / 10) + 1) * 200;
                 else if (len > 20) pricePerUnit = 700;
                 else if (len > 10) pricePerUnit = 500;
-
                 total = count * pricePerUnit;
-
-                if (document.getElementById('bluntEndToggle').checked) {
-                    total += parseInt(document.getElementById('bluntCountRange').value) * 50;
-                }
-                if (document.getElementById('fusionToggle').checked) {
-                    total += parseInt(document.getElementById('fusionCountRange').value) * 50;
-                }
+                if (document.getElementById('bluntEndToggle').checked) total += parseInt(document.getElementById('bluntCountRange').value) * 50;
+                if (document.getElementById('fusionToggle').checked) total += parseInt(document.getElementById('fusionCountRange').value) * 50;
             } else {
-                // Correction
                 total = count * 150;
                 if (document.getElementById('correctionLengthToggle').checked) {
-                    const cCount = parseInt(document.getElementById('corrLengthCountRange').value);
-                    const cLen = parseInt(document.getElementById('corrLengthCmRange').value);
-                    total += cCount * (cLen / 10 * 50);
+                    total += parseInt(document.getElementById('corrLengthCountRange').value) * (parseInt(document.getElementById('corrLengthCmRange').value) / 10 * 50);
                 }
-                if (document.getElementById('rootFeltingToggle').checked) {
-                    total += parseInt(document.getElementById('rootFeltingCountRange').value) * 30;
-                }
+                if (document.getElementById('rootFeltingToggle').checked) total += parseInt(document.getElementById('rootFeltingCountRange').value) * 30;
             }
 
-            // Animate total
+            // Улучшенная анимация цены (удаляем пробелы из текущего значения перед парсингом)
             const display = document.getElementById('totalPrice');
             const startStr = display.innerText.replace(/\s/g, '');
             const start = parseInt(startStr) || 0;
