@@ -11,7 +11,7 @@
     <!-- VK Bridge SDK -->
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
 
-    <!-- PWA Manifest - Updated according to recommendation -->
+    <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
     <link rel="icon" href="icon.svg" type="image/svg+xml">
 
@@ -68,7 +68,12 @@
             font-size: 0.7rem;
         }
 
-        .info-btn {
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-btn, .install-btn {
             font-size: 0.65rem;
             letter-spacing: 0.1em;
             text-transform: uppercase;
@@ -76,6 +81,12 @@
             padding: 0.4rem 0.8rem;
             cursor: pointer;
             transition: all 0.2s;
+        }
+
+        .install-btn {
+            background: var(--charcoal);
+            color: white;
+            display: none; /* Скрыта по умолчанию */
         }
 
         .main-container {
@@ -291,7 +302,10 @@
 
     <header class="sticky-header">
         <div class="header-title">AfroPerm Studio</div>
-        <div class="info-btn" onclick="toggleModal(true)">Прайс & Инфо</div>
+        <div class="header-actions">
+            <div id="installBtn" class="install-btn">Скачать</div>
+            <div class="info-btn" onclick="toggleModal(true)">Прайс</div>
+        </div>
     </header>
 
     <!-- Модальное окно -->
@@ -483,6 +497,38 @@
             vkBridge.send('VKWebAppInit');
         }
 
+        // --- PWA Installation Logic ---
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Предотвращаем автоматический показ окна в старых браузерах
+            e.preventDefault();
+            // Сохраняем событие, чтобы вызвать его позже по кнопке
+            deferredPrompt = e;
+            // Показываем кнопку "Скачать" в шапке
+            installBtn.style.display = 'block';
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            // Показываем нативный диалог установки
+            deferredPrompt.prompt();
+            // Ждем ответа пользователя
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                console.log('Пользователь принял установку');
+            }
+            deferredPrompt = null;
+            installBtn.style.display = 'none';
+        });
+
+        // Скрываем кнопку, если приложение уже установлено
+        window.addEventListener('appinstalled', () => {
+            deferredPrompt = null;
+            installBtn.style.display = 'none';
+        });
+
         // --- PWA Service Worker Registration ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -594,7 +640,6 @@
             calculateTotal();
         }
 
-        // Listeners for UI updates
         const inputs = [
             'countRange', 'lengthRange', 'bluntCountRange', 'fusionCountRange',
             'corrLengthCountRange', 'corrLengthCmRange', 'rootFeltingCountRange',
@@ -618,7 +663,6 @@
             document.getElementById('corrLengthCmVal').innerText = document.getElementById('corrLengthCmRange').value;
             document.getElementById('rootFeltingCountVal').innerText = document.getElementById('rootFeltingCountRange').value;
 
-            // Sub-controls visibility
             document.getElementById('bluntEndControl').classList.toggle('active', document.getElementById('bluntEndToggle').checked);
             document.getElementById('fusionControl').classList.toggle('active', document.getElementById('fusionToggle').checked);
             document.getElementById('correctionLengthControl').classList.toggle('active', document.getElementById('correctionLengthToggle').checked);
@@ -645,7 +689,6 @@
                     total += parseInt(document.getElementById('fusionCountRange').value) * 50;
                 }
             } else {
-                // Correction
                 total = count * 150;
                 if (document.getElementById('correctionLengthToggle').checked) {
                     const cCount = parseInt(document.getElementById('corrLengthCountRange').value);
@@ -657,9 +700,8 @@
                 }
             }
 
-            // Animate total
             const display = document.getElementById('totalPrice');
-            const start = parseInt(display.innerText);
+            const start = parseInt(display.innerText.replace(/\s/g, '')) || 0;
             const duration = 400;
             const startTime = performance.now();
 
