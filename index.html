@@ -68,12 +68,7 @@
             font-size: 0.7rem;
         }
 
-        .header-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .info-btn, .install-btn {
+        .info-btn {
             font-size: 0.65rem;
             letter-spacing: 0.1em;
             text-transform: uppercase;
@@ -81,12 +76,6 @@
             padding: 0.4rem 0.8rem;
             cursor: pointer;
             transition: all 0.2s;
-        }
-
-        .install-btn {
-            background: var(--charcoal);
-            color: white;
-            display: none; /* Скрыта по умолчанию */
         }
 
         .main-container {
@@ -293,6 +282,31 @@
             font-size: 0.8rem;
         }
 
+        /* Стиль кнопки установки */
+        #pwaInstallContainer {
+            display: none;
+            margin-bottom: 2.5rem;
+        }
+
+        .pwa-install-btn {
+            width: 100%;
+            border: 1px solid var(--charcoal);
+            background: transparent;
+            color: var(--charcoal);
+            padding: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pwa-install-btn:active {
+            background: var(--charcoal);
+            color: #fff;
+        }
+
         .hidden-element { display: none !important; }
     </style>
 </head>
@@ -302,10 +316,7 @@
 
     <header class="sticky-header">
         <div class="header-title">AfroPerm Studio</div>
-        <div class="header-actions">
-            <div id="installBtn" class="install-btn">Скачать</div>
-            <div class="info-btn" onclick="toggleModal(true)">Прайс</div>
-        </div>
+        <div class="info-btn" onclick="toggleModal(true)">Прайс & Инфо</div>
     </header>
 
     <!-- Модальное окно -->
@@ -318,6 +329,11 @@
 
             <div class="info-block">
                 <p class="text-sm font-light text-gray-500 italic">Для понимания: итоговая стоимость зависит от количества изготовленных дредов. Количество же зависит от качества ваших волос и желаемого результата — желаемой толщины дреда.</p>
+            </div>
+
+            <!-- Кнопка установки приложения внутри модалки -->
+            <div id="pwaInstallContainer">
+                <button id="pwaInstallBtn" class="pwa-install-btn">Установить приложение на телефон</button>
             </div>
 
             <div class="info-block">
@@ -499,34 +515,36 @@
 
         // --- PWA Installation Logic ---
         let deferredPrompt;
-        const installBtn = document.getElementById('installBtn');
+        const installContainer = document.getElementById('pwaInstallContainer');
+        const installBtn = document.getElementById('pwaInstallBtn');
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Предотвращаем автоматический показ окна в старых браузерах
+            // Предотвращаем автоматический запуск окна браузером
             e.preventDefault();
-            // Сохраняем событие, чтобы вызвать его позже по кнопке
+            // Сохраняем событие для вызова позже
             deferredPrompt = e;
-            // Показываем кнопку "Скачать" в шапке
-            installBtn.style.display = 'block';
+            // Показываем контейнер с кнопкой в модальном окне
+            installContainer.style.display = 'block';
         });
 
         installBtn.addEventListener('click', async () => {
             if (!deferredPrompt) return;
-            // Показываем нативный диалог установки
+            // Запускаем нативный диалог
             deferredPrompt.prompt();
-            // Ждем ответа пользователя
+            // Ждем выбора пользователя
             const { outcome } = await deferredPrompt.userChoice;
             if (outcome === 'accepted') {
-                console.log('Пользователь принял установку');
+                console.log('Пользователь согласился на установку');
             }
+            // Сбрасываем промпт и скрываем кнопку
             deferredPrompt = null;
-            installBtn.style.display = 'none';
+            installContainer.style.display = 'none';
         });
 
-        // Скрываем кнопку, если приложение уже установлено
+        // Скрываем кнопку после успешной установки
         window.addEventListener('appinstalled', () => {
             deferredPrompt = null;
-            installBtn.style.display = 'none';
+            installContainer.style.display = 'none';
         });
 
         // --- PWA Service Worker Registration ---
@@ -640,6 +658,7 @@
             calculateTotal();
         }
 
+        // Listeners for UI updates
         const inputs = [
             'countRange', 'lengthRange', 'bluntCountRange', 'fusionCountRange',
             'corrLengthCountRange', 'corrLengthCmRange', 'rootFeltingCountRange',
@@ -663,6 +682,7 @@
             document.getElementById('corrLengthCmVal').innerText = document.getElementById('corrLengthCmRange').value;
             document.getElementById('rootFeltingCountVal').innerText = document.getElementById('rootFeltingCountRange').value;
 
+            // Sub-controls visibility
             document.getElementById('bluntEndControl').classList.toggle('active', document.getElementById('bluntEndToggle').checked);
             document.getElementById('fusionControl').classList.toggle('active', document.getElementById('fusionToggle').checked);
             document.getElementById('correctionLengthControl').classList.toggle('active', document.getElementById('correctionLengthToggle').checked);
@@ -689,6 +709,7 @@
                     total += parseInt(document.getElementById('fusionCountRange').value) * 50;
                 }
             } else {
+                // Correction
                 total = count * 150;
                 if (document.getElementById('correctionLengthToggle').checked) {
                     const cCount = parseInt(document.getElementById('corrLengthCountRange').value);
@@ -700,8 +721,10 @@
                 }
             }
 
+            // Animate total
             const display = document.getElementById('totalPrice');
-            const start = parseInt(display.innerText.replace(/\s/g, '')) || 0;
+            const startStr = display.innerText.replace(/\s/g, '');
+            const start = parseInt(startStr) || 0;
             const duration = 400;
             const startTime = performance.now();
 
